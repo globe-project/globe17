@@ -13,6 +13,12 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
+#include <qt/tokenitemmodel.h>
+#include <qt/tokentransactiontablemodel.h>
+#include <qt/contracttablemodel.h>
+#include <qt/delegationitemmodel.h>
+#include <qt/superstakeritemmodel.h>
+#include <qt/delegationstakeritemmodel.h>
 
 #include <common/args.h> // for GetBoolArg
 #include <interfaces/handler.h>
@@ -24,6 +30,7 @@
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h> // for CRecipient
+#include <qt/qtumhwitool.h>
 
 #include <stdint.h>
 #include <functional>
@@ -32,6 +39,7 @@
 #include <QMessageBox>
 #include <QSet>
 #include <QTimer>
+#include <QFile>
 
 using wallet::CCoinControl;
 using wallet::CRecipient;
@@ -300,6 +308,10 @@ AddressTableModel* WalletModel::getAddressTableModel() const
     return addressTableModel;
 }
 
+ContractTableModel *WalletModel::getContractTableModel() const
+{
+    return contractTableModel;
+}
 TransactionTableModel* WalletModel::getTransactionTableModel() const
 {
     return transactionTableModel;
@@ -308,6 +320,31 @@ TransactionTableModel* WalletModel::getTransactionTableModel() const
 RecentRequestsTableModel* WalletModel::getRecentRequestsTableModel() const
 {
     return recentRequestsTableModel;
+}
+
+TokenItemModel *WalletModel::getTokenItemModel() const
+{
+    return tokenItemModel;
+}
+
+TokenTransactionTableModel *WalletModel::getTokenTransactionTableModel() const
+{
+    return tokenTransactionTableModel;
+}
+
+DelegationItemModel *WalletModel::getDelegationItemModel() const
+{
+    return delegationItemModel;
+}
+
+SuperStakerItemModel *WalletModel::getSuperStakerItemModel() const
+{
+    return superStakerItemModel;
+}
+
+DelegationStakerItemModel *WalletModel::getDelegationStakerItemModel() const
+{
+    return delegationStakerItemModel;
 }
 
 WalletModel::EncryptionStatus WalletModel::getEncryptionStatus() const
@@ -627,4 +664,123 @@ CAmount WalletModel::getAvailableBalance(const CCoinControl* control)
     }
     // Fetch balance from the wallet, taking into account the selected coins
     return wallet().getAvailableBalance(*control);
+}
+
+QString WalletModel::getRestorePath()
+{
+    return restorePath;
+}
+
+QString WalletModel::getRestoreParam()
+{
+    return restoreParam;
+}
+
+bool WalletModel::restore()
+{
+    return !restorePath.isEmpty();
+}
+
+uint64_t WalletModel::getStakeWeight()
+{
+    return nWeight;
+}
+
+bool WalletModel::getWalletUnlockStakingOnly()
+{
+    return m_wallet->getWalletUnlockStakingOnly();
+}
+
+void WalletModel::setWalletUnlockStakingOnly(bool unlock)
+{
+    m_wallet->setWalletUnlockStakingOnly(unlock);
+}
+
+void WalletModel::checkCoinAddresses()
+{
+    updateCoinAddresses = true;
+}
+
+QString WalletModel::getFingerprint(bool stake) const
+{
+    if(stake)
+    {
+        std::string ledgerId = wallet().getStakerLedgerId();
+        return QString::fromStdString(ledgerId);
+    }
+
+    return fingerprint;
+}
+
+void WalletModel::setFingerprint(const QString &value, bool stake)
+{
+    if(stake)
+    {
+        wallet().setStakerLedgerId(value.toStdString());
+    }
+    else
+    {
+        fingerprint = value;
+    }
+}
+
+void WalletModel::importAddressesData(bool _rescan, bool _importPKH, bool _importP2SH, bool _importBech32, QString _pathPKH, QString _pathP2SH, QString _pathBech32)
+{
+    rescan = _rescan;
+    importPKH = _importPKH;
+    importP2SH = _importP2SH;
+    importBech32 = _importBech32;
+    pathPKH = _pathPKH;
+    pathP2SH = _pathP2SH;
+    pathBech32 = _pathBech32;
+    hardwareWalletInitRequired = true;
+}
+
+bool WalletModel::getSignPsbtWithHwiTool()
+{
+    if(!::Params().HasHardwareWalletSupport())
+        return false;
+
+    return wallet().privateKeysDisabled() && gArgs.GetBoolArg("-signpsbtwithhwitool", wallet::DEFAULT_SIGN_PSBT_WITH_HWI_TOOL);
+}
+
+bool WalletModel::getSignMessageWithHwiTool()
+{
+    if(!::Params().HasHardwareWalletSupport())
+        return false;
+
+    return wallet().privateKeysDisabled();
+}
+
+bool WalletModel::createUnsigned()
+{
+    if(wallet().privateKeysDisabled())
+    {
+        if(!::Params().HasHardwareWalletSupport())
+            return true;
+
+        QString hwiToolPath = GUIUtil::getHwiToolPath();
+        if(QFile::exists(hwiToolPath))
+        {
+            return !getSignPsbtWithHwiTool();
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool WalletModel::hasLedgerProblem()
+{
+    return wallet().privateKeysDisabled() &&
+            wallet().getEnabledStaking() &&
+            !getFingerprint(true).isEmpty();
+}
+
+QList<HWDevice> WalletModel::getDevices()
+{
+    return devices;
 }
