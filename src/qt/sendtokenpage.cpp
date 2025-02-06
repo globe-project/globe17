@@ -282,8 +282,8 @@ void SendTokenPage::setTokenData(std::string address, std::string sender, std::s
     QString unit = QString::fromStdString(symbol);
 
     // Convert values for different number of decimals
-    int256_t totalSupply(balance);
-    int256_t value(ui->lineEditAmount->value());
+    dev::s256 totalSupply(balance);
+    dev::s256 value(ui->lineEditAmount->value());
     if(value != 0)
     {
         for(int i = 0; i < decimalDiff; i++)

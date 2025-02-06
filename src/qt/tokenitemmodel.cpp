@@ -54,7 +54,7 @@ public:
     QString tokenSymbol;
     quint8 decimals;
     QString senderAddress;
-    int256_t balance;
+    dev::s256 balance;
 };
 
 class TokenTxWorker : public QObject
@@ -272,7 +272,7 @@ public:
     {
         uint256 updated;
         updated.SetHex(hash.toStdString());
-        int256_t val(balance.toStdString());
+        dev::s256 val(balance.toStdString());
 
         for(int i = 0; i < cachedTokenItem.size(); i++)
         {
