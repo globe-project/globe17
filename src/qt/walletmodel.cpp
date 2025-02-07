@@ -393,6 +393,22 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
     return m_wallet->changeWalletPassphrase(oldPass, newPass);
 }
 
+bool WalletModel::restoreWallet(const QString &filename, const QString &param)
+{
+    if(QFile::exists(filename))
+    {
+        fs::path pathWalletBak = gArgs.GetDataDirNet() / strprintf("wallet.%d.bak", GetTime()).c_str();
+        std::string walletBak = fs::PathToString(pathWalletBak);
+        if(m_wallet->backupWallet(walletBak))
+        {
+            restorePath = filename;
+            restoreParam = param;
+            return true;
+        }
+    }
+
+    return false;
+}
 // Handlers for core signals
 static void NotifyUnload(WalletModel* walletModel)
 {

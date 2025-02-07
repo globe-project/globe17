@@ -1681,3 +1681,7 @@ void UnitDisplayStatusBarControl::onMenuSelection(QAction* action)
         optionsModel->setDisplayUnit(action->data());
     }
 }
+
+void BitcoinGUI::join()
+{
+}

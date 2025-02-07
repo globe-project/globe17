@@ -104,6 +104,7 @@ public:
 
     bool isPrivacyModeActivated() const;
 
+    void join();
 protected:
     void changeEvent(QEvent *e) override;
     void closeEvent(QCloseEvent *event) override;
