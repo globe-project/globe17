@@ -476,6 +476,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/delegationfilterproxy.cpp \
   qt/delegationitemwidget.cpp \
   qt/delegationlistwidget.cpp \
+  qt/delegationpage.cpp \
   qt/delegationsstakerdialog.cpp \
   qt/derivationpathdialog.cpp \
   qt/eventlog.cpp \

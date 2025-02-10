@@ -124,7 +124,7 @@ public:
     bool restoreWallet(const QString &filename, const QString &param);
     bool getWalletUnlockStakingOnly();
     void setWalletUnlockStakingOnly(bool unlock);
-    // RAII object for unlocking wallet, returned by requestUnlock()
+    // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
     {
     public:
@@ -179,6 +179,9 @@ public:
     // Otherwise, uses the wallet's cached available balance.
     CAmount getAvailableBalance(const wallet::CCoinControl* control);
 
+    // Retrieve the cached wallet balance
+    CAmount getCachedBalance(const wallet::CCoinControl* control) const;
+
     // Get or set selected hardware device fingerprint (only for hardware wallet applicable)
     QString getFingerprint(bool stake = false) const;
     void setFingerprint(const QString &value, bool stake = false);
@@ -191,15 +194,19 @@ public:
     bool createUnsigned();
     bool hasLedgerProblem();
 
+    void join();
+
 private:
     std::unique_ptr<interfaces::Wallet> m_wallet;
     std::unique_ptr<interfaces::Handler> m_handler_unload;
     std::unique_ptr<interfaces::Handler> m_handler_status_changed;
     std::unique_ptr<interfaces::Handler> m_handler_address_book_changed;
     std::unique_ptr<interfaces::Handler> m_handler_transaction_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_token_changed;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
     std::unique_ptr<interfaces::Handler> m_handler_can_get_addrs_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_contract_book_changed;
     ClientModel* m_client_model;
     interfaces::Node& m_node;
 
@@ -252,7 +259,10 @@ private:
     WalletWorker *worker{nullptr};
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
-    void checkBalanceChanged(const interfaces::WalletBalances& new_balances);
+    bool checkBalanceChanged(const interfaces::WalletBalances& new_balances);
+    void checkTokenBalanceChanged();
+    void checkDelegationChanged();
+    void checkSuperStakerChanged();
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
@@ -303,8 +313,18 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
+    /* New, updated or removed contract book entry */
+    void updateContractBook(const QString &address, const QString &label, const QString &abi, int status);
     /* Set that update for coin address is needed */
     void checkCoinAddresses();
+    /* Update coin addresses when changed*/
+    void checkCoinAddressesChanged();
+    /* Update stake weight when changed*/
+    void checkStakeWeightChanged();
+    /* Check for hardware wallet params changes*/
+    void checkHardwareWallet();
+    /* Check for hardware device params changes*/
+    void checkHardwareDevice();
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H
