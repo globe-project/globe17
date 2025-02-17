@@ -54,7 +54,7 @@ public:
     QString tokenSymbol;
     quint8 decimals;
     QString senderAddress;
-    int256_t balance;
+    dev::s256 balance;
 };
 
 class TokenTxWorker : public QObject
@@ -271,8 +271,8 @@ public:
     int updateBalance(QString hash, QString balance)
     {
         uint256 updated;
-        updated.SetHex(hash.toStdString());
-        int256_t val(balance.toStdString());
+        updated.SetHexDeprecated(hash.toStdString());
+        dev::s256 val(balance.toStdString());
 
         for(int i = 0; i < cachedTokenItem.size(); i++)
         {
@@ -426,7 +426,7 @@ void TokenItemModel::updateToken(const QString &hash, int status, bool showToken
 {
     // Find token in wallet
     uint256 updated;
-    updated.SetHex(hash.toStdString());
+    updated.SetHexDeprecated(hash.toStdString());
     interfaces::TokenInfo token =walletModel->wallet().getToken(updated);
     showToken &= token.hash == updated;
 

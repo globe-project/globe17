@@ -62,8 +62,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         for n in self.nodes:
             n.setmocktime(n.getblockheader(n.getbestblockhash())['time'])
 
-        self.sync_blocks()
-
         n0.createwallet('w')
         w = n0.get_wallet_rpc("w")
 
@@ -78,7 +76,6 @@ class AssumeutxoTest(BitcoinTestFramework):
                 self.mini_wallet.send_self_transfer(from_node=n0)
             self.generate(n0, nblocks=1, sync_fun=self.no_op)
             newblock = n0.getblock(n0.getbestblockhash(), 0)
-            
             blocks.append(newblock)
             # make n1 aware of the new header, but don't give it the block.
             n1.submitheader(newblock)
@@ -147,7 +144,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         #Qtum sync to a block within rolling checkpoint
         for i in range(1200):
             n1.submitblock(blocks[i])
-            
         self.connect_nodes(0, 1, wait_for_connect=False)
 
         n1.wait_until_stopped(timeout=5)
@@ -173,4 +169,4 @@ class AssumeutxoTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    AssumeutxoTest().main()
+    AssumeutxoTest(__file__).main()

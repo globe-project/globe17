@@ -344,8 +344,6 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
             QVERIFY(address.isEmpty());
             address = receiveRequestDialog->QObject::findChild<QLabel*>("address_content")->text();
             QVERIFY(!address.isEmpty());
-
- 
         }
     }
 

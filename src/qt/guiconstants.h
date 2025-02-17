@@ -18,7 +18,6 @@ static constexpr auto SHUTDOWN_POLLING_DELAY{200ms};
 
 /* Milliseconds between device updates */
 static constexpr auto DEVICE_UPDATE_DELAY{10000ms};
-
 /* AskPassphraseDialog -- Maximum passphrase length */
 static const int MAX_PASSPHRASE_SIZE = 1024;
 
@@ -26,6 +25,7 @@ static const int MAX_PASSPHRASE_SIZE = 1024;
 static const int STATUSBAR_ICONSIZE = 16;
 
 static const bool DEFAULT_SPLASHSCREEN = true;
+
 
 /* Transaction list -- unconfirmed transaction */
 #define COLOR_UNCONFIRMED QColor(128, 128, 128)
@@ -42,7 +42,6 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 
 // Number of different confirmation icons
 #define CONFIRM_ICONS 5
-
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.
  */
@@ -55,6 +54,7 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 #define QAPP_ORG_DOMAIN "qtum.org"
 #define QAPP_APP_NAME_DEFAULT "Qtum-Qt"
 #define QAPP_APP_NAME_TESTNET "Qtum-Qt-testnet"
+#define QAPP_APP_NAME_TESTNET4 "Qtum-Qt-testnet4"
 #define QAPP_APP_NAME_SIGNET "Qtum-Qt-signet"
 #define QAPP_APP_NAME_REGTEST "Qtum-Qt-regtest"
 
@@ -72,5 +72,4 @@ static constexpr int DEFAULT_PRUNE_TARGET_GB{2};
 
 /* Hardware wallet interface uri */
 #define QTUM_HWI_TOOL "<a href='https://github.com/qtumproject/HWI/tags'>HWI Tool</a>"
-
 #endif // BITCOIN_QT_GUICONSTANTS_H

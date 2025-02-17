@@ -68,7 +68,7 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     mode(_mode),
     tab(_tab)
 {
-   ui->setupUi(this);
+    ui->setupUi(this);
     SetObjectStyleSheet(ui->tableView, StyleSheetNames::TableViewLight);
     setStyleSheet("");
     if (!platformStyle->getImagesOnButtons()) {
@@ -105,6 +105,7 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     {
     case SendingTab:
         ui->labelExplanation->setText(tr("These are your Qtum addresses for sending payments. Always check the amount and the receiving address before sending coins."));
+        ui->deleteAddress->setVisible(true);
         ui->newAddress->setVisible(true);
         break;
     case ReceivingTab:

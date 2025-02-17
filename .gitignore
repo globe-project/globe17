@@ -131,12 +131,12 @@ win32-build
 test/config.ini
 test/cache/*
 test/.mypy_cache/
+test/lint/test_runner/target/
 
 !src/leveldb*/Makefile
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
 contrib/devtools/split-debug.sh
 
 # Output from running db4 installation
@@ -145,7 +145,6 @@ db4/
 # clang-check
 *.plist
 
-osx_volname
 dist/
 
 /guix-build-*
@@ -159,3 +158,4 @@ src/test/buildenv.py
 Debug
 src/secp256k1/gen_context
 src/secp256k1/src/ecmult_static_context.h
+src/cryptopp/adhoc.cpp

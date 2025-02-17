@@ -5,7 +5,6 @@
 #include <headerssync.h>
 #include <logging.h>
 #include <pow.h>
-#include <timedata.h>
 #include <util/check.h>
 #include <util/time.h>
 #include <util/vector.h>
@@ -27,7 +26,7 @@ static_assert(sizeof(CompressedHeader) == 176 || sizeof(CompressedHeader) == 160
 
 HeadersSyncState::HeadersSyncState(NodeId id, const Consensus::Params& consensus_params,
         const CBlockIndex* chain_start, const arith_uint256& minimum_required_work) :
-    m_commit_offset(GetRand<unsigned>(HEADER_COMMITMENT_PERIOD)),
+    m_commit_offset(FastRandomContext().randrange<unsigned>(HEADER_COMMITMENT_PERIOD)),
     m_id(id), m_consensus_params(consensus_params),
     m_chain_start(chain_start),
     m_minimum_required_work(minimum_required_work),
@@ -51,7 +50,7 @@ HeadersSyncState::HeadersSyncState(NodeId id, const Consensus::Params& consensus
     else
     {
         // Mainnet or testnet, so use the Qtum formula
-        int64_t numberOfBlocks = (GetAdjustedTimeSeconds() + MAX_FUTURE_BLOCK_TIME - chain_start->GetBlockTime()) / (consensus_params.MinStakeTimestampMask() + 1);
+        int64_t numberOfBlocks = (TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()) + MAX_FUTURE_BLOCK_TIME - chain_start->GetBlockTime()) / (consensus_params.MinStakeTimestampMask() + 1);
         if(numberOfBlocks > 0)
         {
             if(chain_start->nHeight <= consensus_params.nLastPOWBlock)

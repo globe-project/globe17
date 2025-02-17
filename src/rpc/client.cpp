@@ -165,6 +165,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "testmempoolaccept", 0, "rawtxs" },
     { "testmempoolaccept", 1, "maxfeerate" },
     { "submitpackage", 0, "package" },
+    { "submitpackage", 1, "maxfeerate" },
+    { "submitpackage", 2, "maxburnamount" },
     { "combinerawtransaction", 0, "txs" },
     { "fundrawtransaction", 1, "options" },
     { "fundrawtransaction", 1, "add_inputs"},
@@ -181,6 +183,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "fundrawtransaction", 1, "conf_target"},
     { "fundrawtransaction", 1, "replaceable"},
     { "fundrawtransaction", 1, "solving_data"},
+    { "fundrawtransaction", 1, "max_tx_weight"},
     { "fundrawtransaction", 2, "iswitness" },
     { "walletcreatefundedpsbt", 0, "inputs" },
     { "walletcreatefundedpsbt", 1, "outputs" },
@@ -199,6 +202,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "walletcreatefundedpsbt", 3, "conf_target"},
     { "walletcreatefundedpsbt", 3, "replaceable"},
     { "walletcreatefundedpsbt", 3, "solving_data"},
+    { "walletcreatefundedpsbt", 3, "max_tx_weight"},
     { "walletcreatefundedpsbt", 4, "bip32derivs" },
     { "walletprocesspsbt", 1, "sign" },
     { "walletprocesspsbt", 3, "bip32derivs" },
@@ -243,6 +247,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "send", 4, "conf_target"},
     { "send", 4, "replaceable"},
     { "send", 4, "solving_data"},
+    { "send", 4, "max_tx_weight"},
     { "sendall", 0, "recipients" },
     { "sendall", 1, "conf_target" },
     { "sendall", 3, "fee_rate"},
@@ -312,6 +317,11 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "logging", 1, "exclude" },
     { "disconnectnode", 1, "nodeid" },
     { "upgradewallet", 0, "version" },
+    { "gethdkeys", 0, "active_only" },
+    { "gethdkeys", 0, "options" },
+    { "gethdkeys", 0, "private" },
+    { "createwalletdescriptor", 1, "options" },
+    { "createwalletdescriptor", 1, "internal" },
     { "createcontract", 1, "gaslimit" },
     { "createcontract", 2, "gasprice" },
     { "createcontract", 4, "broadcast" },
@@ -461,7 +471,7 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
         // Use pushKVEnd instead of pushKV to avoid overwriting an explicit
         // "args" value with an implicit one. Let the RPC server handle the
         // request as given.
-        params.pushKVEnd("args", positional_args);
+        params.pushKVEnd("args", std::move(positional_args));
     }
 
     return params;

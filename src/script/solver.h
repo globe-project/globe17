@@ -29,6 +29,7 @@ static const uint64_t STANDARD_MINIMUM_GAS_PRICE = 1;
 enum class TxoutType {
     NONSTANDARD,
     // 'standard' transaction types:
+    ANCHOR, //!< anyone can spend script
     PUBKEY,
     PUBKEYHASH,
     SCRIPTHASH,

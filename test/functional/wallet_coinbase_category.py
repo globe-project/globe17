@@ -61,4 +61,4 @@ class CoinbaseCategoryTest(BitcoinTestFramework):
         self.assert_category("orphan", address, txid, COINBASE_MATURITY)
 
 if __name__ == '__main__':
-    CoinbaseCategoryTest().main()
+    CoinbaseCategoryTest(__file__).main()

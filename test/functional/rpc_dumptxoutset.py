@@ -59,4 +59,4 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    DumptxoutsetTest().main()
+    DumptxoutsetTest(__file__).main()

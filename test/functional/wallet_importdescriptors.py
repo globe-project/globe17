@@ -37,12 +37,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 2
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.extra_args = [["-addresstype=legacy"],
                            ["-addresstype=bech32", "-keypool=5"]
                           ]
-        # whitelist peers to speed up tx relay / mempool sync
-        for args in self.extra_args:
-            args.append("-whitelist=noban@127.0.0.1")
         self.setup_clean_chain = True
         self.wallet_names = []
 
@@ -713,4 +712,4 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(temp_wallet.getbalance(), encrypted_wallet.getbalance())
 
 if __name__ == '__main__':
-    ImportDescriptorsTest().main()
+    ImportDescriptorsTest(__file__).main()

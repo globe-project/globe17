@@ -32,13 +32,13 @@ void initialize_process_messages()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>(
             /*chain_type=*/ChainType::UNITTEST,
-            /*extra_args=*/{"-txreconciliation"});
+            {.extra_args = {"-txreconciliation"}});
     g_setup = testing_setup.get();
     int coinbaseMaturity = Params().GetConsensus().CoinbaseMaturity(0);
     for (int i = 0; i < 2 * coinbaseMaturity; i++) {
         MineBlock(g_setup->m_node, CScript() << OP_TRUE);
     }
-    SyncWithValidationInterfaceQueue();
+    g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 
 FUZZ_TARGET(process_messages, .init = initialize_process_messages)
@@ -90,6 +90,6 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
             g_setup->m_node.peerman->SendMessages(&random_node);
         }
     }
-    SyncWithValidationInterfaceQueue();
+    g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
     g_setup->m_node.connman->StopNodes();
 }

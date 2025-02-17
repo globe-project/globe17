@@ -6,6 +6,7 @@
 #ifndef BITCOIN_NODE_MINER_H
 #define BITCOIN_NODE_MINER_H
 
+#include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <txmempool.h>
@@ -34,7 +35,7 @@ namespace wallet { class CWallet; };
 namespace Consensus { struct Params; };
 
 namespace node {
-static const bool DEFAULT_PRINTPRIORITY = false;
+static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
 static const bool DEFAULT_STAKE = true;
 
@@ -198,21 +199,25 @@ struct CompareTxIterByAncestorCount {
     }
 };
 
+
+struct CTxMemPoolModifiedEntry_Indices final : boost::multi_index::indexed_by<
+    boost::multi_index::ordered_unique<
+        modifiedentry_iter,
+        CompareCTxMemPoolIter
+    >,
+    // sorted by modified ancestor fee rate
+    boost::multi_index::ordered_non_unique<
+        // Reuse same tag from CTxMemPool's similar index
+        boost::multi_index::tag<ancestor_score_or_gas_price>,
+        boost::multi_index::identity<CTxMemPoolModifiedEntry>,
+        CompareModifiedEntry
+    >
+>
+{};
+
 typedef boost::multi_index_container<
     CTxMemPoolModifiedEntry,
-    boost::multi_index::indexed_by<
-        boost::multi_index::ordered_unique<
-            modifiedentry_iter,
-            CompareCTxMemPoolIter
-        >,
-        // sorted by modified ancestor fee rate or gas price
-        boost::multi_index::ordered_non_unique<
-            // Reuse same tag from CTxMemPool's similar index
-            boost::multi_index::tag<ancestor_score_or_gas_price>,
-            boost::multi_index::identity<CTxMemPoolModifiedEntry>,
-            CompareModifiedEntry
-        >
-    >
+    CTxMemPoolModifiedEntry_Indices
 > indexed_modified_transaction_set;
 
 typedef indexed_modified_transaction_set::nth_index<0>::type::iterator modtxiter;
@@ -258,15 +263,15 @@ private:
 #endif
 
 public:
-    struct Options {
+    struct Options : BlockCreateOptions {
         // Configuration parameters for the block size
         mutable size_t nBlockMaxWeight{DEFAULT_BLOCK_MAX_WEIGHT};
         CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
         // Whether to call TestBlockValidity() at the end of CreateNewBlock().
         bool test_block_validity{true};
+        bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
     };
 
-    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool);
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
 #ifdef ENABLE_WALLET
     explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, wallet::CWallet *pwallet);

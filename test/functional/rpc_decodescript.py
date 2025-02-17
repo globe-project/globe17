@@ -187,6 +187,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         assert_equal('1 ' + xonly_public_key, rpc_result['asm'])
         assert 'segwit' not in rpc_result
 
+
     def decoderawtransaction_asm_sighashtype(self):
         """Test decoding scripts via RPC command "decoderawtransaction".
 
@@ -289,4 +290,4 @@ class DecodeScriptTest(BitcoinTestFramework):
         self.decodescript_miniscript()
 
 if __name__ == '__main__':
-    DecodeScriptTest().main()
+    DecodeScriptTest(__file__).main()

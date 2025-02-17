@@ -59,7 +59,7 @@
     </message>
     <message>
         <source>These are your Qtum addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">यी भुक्तानी गर्नका लागि तपाइका क्तुम ठेगानाहरू हुन्। सिक्काहरू पठाउनुअघि रकम र प्राप्त गर्ने ठेगाना जाँच गर्नुहोस।</translation>
+        <translation type="unfinished">यी भुक्तानी गर्नका लागि तपाइका बिट्कोइन ठेगानाहरू हुन्। सिक्काहरू पठाउनुअघि रकम र प्राप्त गर्ने ठेगाना जाँच गर्नुहोस।</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -848,10 +848,6 @@
 </context>
 <context>
     <name>SignVerifyMessageDialog</name>
-    <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive qtums sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">आफ्नो ठेगानामा पठाइएको क्तुम प्राप्त गर्न सकिन्छ भनेर प्रमाणित गर्न तपाईंले ती ठेगानाले सन्देश/सम्झौताहरूमा हस्ताक्षर गर्न सक्नुहुन्छ । फिसिङ आक्रमणले तपाईंलाई छक्याएर अरूका लागि तपाईंको परिचयमा हस्ताक्षर गराउने प्रयास गर्न सक्ने भएकाले अस्पष्ट वा जथाभावीमा हस्ताक्षर गर्दा ध्यान दिनुहोस् । आफू सहमत भएको पूर्ण विस्तृत-कथनमा मात्र हस्ताक्षर गर्नुहोस् ।</translation>
-    </message>
     <message>
         <source>Choose previously used address</source>
         <translation type="unfinished">पहिला प्रयोग गरिएको ठेगाना प्रयोग गर्नुहोस्</translation>

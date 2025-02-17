@@ -59,7 +59,7 @@ The `includeconf=<file>` option in the `qtum.conf` file can be used to include a
 
 Operating System | Data Directory | Example Path
 -- | -- | --
-Windows | `%APPDATA%\Qtum\` | `C:\Users\username\AppData\Roaming\Qtum\qtum.conf`
+Windows | `%LOCALAPPDATA%\Qtum\` | `C:\Users\username\AppData\Local\Qtum\qtum.conf`
 Linux | `$HOME/.qtum/` | `/home/username/.qtum/qtum.conf`
 macOS | `$HOME/Library/Application Support/Qtum/` | `/Users/username/Library/Application Support/Qtum/qtum.conf`
 

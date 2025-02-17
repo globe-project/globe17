@@ -205,4 +205,4 @@ class AssumeValidTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    AssumeValidTest().main()
+    AssumeValidTest(__file__).main()

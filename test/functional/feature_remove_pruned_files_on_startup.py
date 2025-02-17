@@ -53,4 +53,4 @@ class FeatureRemovePrunedFilesOnStartupTest(BitcoinTestFramework):
         assert not os.path.exists(rev1)
 
 if __name__ == '__main__':
-    FeatureRemovePrunedFilesOnStartupTest().main()
+    FeatureRemovePrunedFilesOnStartupTest(__file__).main()

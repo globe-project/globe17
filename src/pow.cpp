@@ -118,6 +118,16 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     bnNew.SetCompact(pindexLast->nBits);
     int64_t nInterval = params.DifficultyAdjustmentInterval(nHeight); 
 
+    // Special difficulty rule for Testnet4 in Bitcoin
+    if (params.enforce_BIP94) {
+        // Here we use the first block of the difficulty period. This way
+        // the real difficulty is always preserved in the first block as
+        // it is not allowed to use the min-difficulty exception.
+        int nHeightFirst = pindexLast->nHeight - (nInterval-1);
+        const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
+        bnNew.SetCompact(pindexFirst->nBits);
+    }
+
     if (nHeight < params.QIP9Height) {
         if (nActualSpacing < 0)
             nActualSpacing = nTargetSpacing;

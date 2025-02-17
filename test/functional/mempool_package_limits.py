@@ -345,4 +345,4 @@ class MempoolPackageLimitsTest(BitcoinTestFramework):
 
 
 if __name__ == "__main__":
-    MempoolPackageLimitsTest().main()
+    MempoolPackageLimitsTest(__file__).main()
