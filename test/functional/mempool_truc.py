@@ -24,7 +24,7 @@ from test_framework.wallet import (
 MAX_REPLACEMENT_CANDIDATES = 100
 TRUC_MAX_VSIZE = 10000
 
-def cleanup(extra_args=None):
+def cleanup(extra_args=[]):
     def decorator(func):
         def wrapper(self):
             extra_args.append('-minrelaytxfee=0.0000001')

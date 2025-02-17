@@ -221,10 +221,11 @@ class ZMQTest (BitcoinTestFramework):
             hex = rawblock.receive()
             block = CBlock()
             block.deserialize(BytesIO(hex))
+            block.rehash()
             assert block.is_valid()
             assert_equal(block.vtx[0].hash, tx.hash)
             assert_equal(len(block.vtx), 1)
-            assert_equal(genhashes[x], hash256_reversed(hex[:80]).hex())
+            assert_equal(genhashes[x], block.hash)
 
             # Should receive the generated block hash.
             hash = hashblock.receive().hex()
