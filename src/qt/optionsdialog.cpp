@@ -134,7 +134,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     ui->proxyPortTorLabel->setEnabled(false);
     ui->proxyPortTor->setValidator(new QIntValidator(1, 65535, this));
 
-   ui->reserveBalance->setNotifyAlways(false);
+    ui->reserveBalance->setNotifyAlways(false);
     connect(ui->connectSocks, &QPushButton::toggled, ui->proxyIp, &QWidget::setEnabled);
     connect(ui->connectSocks, &QPushButton::toggled, ui->proxyIpLabel, &QWidget::setEnabled);
     connect(ui->connectSocks, &QPushButton::toggled, ui->proxyPort, &QWidget::setEnabled);
@@ -153,8 +153,6 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWindow));
     /* hide launch at startup option on macOS */
     ui->bitcoinAtStartup->setVisible(false);
-    ui->verticalLayout_Main->removeWidget(ui->bitcoinAtStartup);
-    ui->verticalLayout_Main->removeItem(ui->horizontalSpacer_0_Main);
     ui->tabMain->layout()->removeWidget(ui->bitcoinAtStartup);
 #endif
 
