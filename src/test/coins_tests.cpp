@@ -10,6 +10,7 @@
 #include <test/test_bitcoin.h>
 #include <validation.h>
 #include <consensus/validation.h>
+#include <globe/stealth.h>
 
 #include <vector>
 #include <map>

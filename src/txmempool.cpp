@@ -17,6 +17,8 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utiltime.h>
+#include <anon.h>
+#include <random.h>
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
@@ -160,6 +162,10 @@ bool CTxMemPool::CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntr
         // GetMemPoolParents() is only valid for entries in the mempool, so we
         // iterate mapTx to find parents.
         for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            if (tx.vin[i].IsAnonInput()) {
+                continue;
+            }
+
             txiter piter = mapTx.find(tx.vin[i].prevout.hash);
             if (piter != mapTx.end()) {
                 parentHashes.insert(piter);
@@ -384,6 +390,9 @@ void CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     const CTransaction& tx = newit->GetTx();
     std::set<uint256> setParentTransactions;
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        if (tx.vin[i].IsAnonInput())
+            continue;
+
         mapNextTx.insert(std::make_pair(&tx.vin[i].prevout, &tx));
         setParentTransactions.insert(tx.vin[i].prevout.hash);
     }
@@ -416,8 +425,14 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
     NotifyEntryRemoved(it->GetSharedTx(), reason);
     const uint256 hash = it->GetTx().GetHash();
-    for (const CTxIn& txin : it->GetTx().vin)
+    for (const CTxIn& txin : it->GetTx().vin) {
+        if (txin.IsAnonInput()) {
+            RemoveKeyImagesFromMempool(hash, txin, *this);
+            continue;
+        }
+
         mapNextTx.erase(txin.prevout);
+    }
 
     if (vTxHashes.size() > 1) {
         vTxHashes[it->vTxHashesIdx] = std::move(vTxHashes.back());
@@ -480,7 +495,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
             // be sure to remove any children that are in the pool. This can
             // happen during chain re-orgs if origTx isn't re-accepted into
             // the mempool for any reason.
-            for (unsigned int i = 0; i < origTx.vout.size(); i++) {
+            for (unsigned int i = 0; i < origTx.GetNumVOuts(); i++) {
                 auto it = mapNextTx.find(COutPoint(origTx.GetHash(), i));
                 if (it == mapNextTx.end())
                     continue;
@@ -513,9 +528,13 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
             txToRemove.insert(it);
         } else if (it->GetSpendsCoinbase()) {
             for (const CTxIn& txin : tx.vin) {
+                if (txin.IsAnonInput())
+                    continue;
+
                 indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
                 if (it2 != mapTx.end())
                     continue;
+
                 const Coin &coin = pcoins->AccessCoin(txin.prevout);
                 if (nCheckFrequency != 0) assert(!coin.IsSpent());
                 if (coin.IsSpent() || (coin.IsCoinBase() && ((signed long)nMemPoolHeight) - coin.nHeight < COINBASE_MATURITY)) {
@@ -539,7 +558,31 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
 {
     // Remove transactions which depend on inputs of tx, recursively
     AssertLockHeld(cs);
-    for (const CTxIn &txin : tx.vin) {
+    for (const auto &txin : tx.vin) {
+        if (txin.IsAnonInput()) {
+            uint32_t nInputs, nRingSize;
+            txin.GetAnonInfo(nInputs, nRingSize);
+
+            const std::vector<uint8_t> &vKeyImages = txin.scriptData.stack[0];
+            for (size_t k = 0; k < nInputs; ++k) {
+                const CCmpPubKey &ki = *((CCmpPubKey*)&vKeyImages[k*33]);
+                uint256 txhashKI;
+                if (HaveKeyImage(ki, txhashKI)) {
+                    txiter origit = mapTx.find(txhashKI);
+
+                    if (origit != mapTx.end()) {
+                        const CTransaction& txConflict = origit->GetTx();
+                        if (txConflict != tx) {
+                            ClearPrioritisation(txConflict.GetHash());
+                            removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
+                        }
+                    }
+                }
+            }
+
+            continue;
+        }
+
         auto it = mapNextTx.find(txin.prevout);
         if (it != mapNextTx.end()) {
             const CTransaction &txConflict = *it->second;
@@ -549,6 +592,7 @@ void CTxMemPool::removeConflicts(const CTransaction &tx)
                 removeRecursive(txConflict, MemPoolRemovalReason::CONFLICT);
             }
         }
+
     }
 }
 
@@ -644,11 +688,20 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         int64_t parentSizes = 0;
         int64_t parentSigOpCost = 0;
         for (const CTxIn &txin : tx.vin) {
+            if (txin.IsAnonInput())
+                continue;
+
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
             indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
                 const CTransaction& tx2 = it2->GetTx();
-                assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+
+                if (fGlobeMode)
+                    assert(tx2.vpout.size() > txin.prevout.n && tx2.vpout[txin.prevout.n] != nullptr
+                           && (tx2.vpout[txin.prevout.n]->IsStandardOutput() || tx2.vpout[txin.prevout.n]->IsType(OUTPUT_CT)));
+                else
+                    assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
+
                 fDependsWait = true;
                 if (setParentCheck.insert(it2).second) {
                     parentSizes += it2->GetTxSize();
@@ -873,11 +926,31 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
     mapDeltas.erase(hash);
 }
 
+bool CTxMemPool::HaveKeyImage(const CCmpPubKey &ki, uint256 &hash) const
+{
+    LOCK(cs);
+
+    std::map<CCmpPubKey, uint256>::const_iterator mi;
+    mi = mapKeyImages.find(ki);
+
+    if (mi != mapKeyImages.end())
+    {
+        hash = mi->second;
+        return true;
+    };
+
+    return false;
+}
+
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        if (tx.vin[i].IsAnonInput())
+            continue;
         if (exists(tx.vin[i].prevout.hash))
             return false;
+    }
+
     return true;
 }
 
@@ -889,6 +962,25 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
     CTransactionRef ptx = mempool.get(outpoint.hash);
     if (ptx) {
+        if (ptx->IsGlobeVersion()) {
+            if (outpoint.n < ptx->vpout.size()) {
+                const CTxOutBase *out = ptx->vpout[outpoint.n].get();
+                const CScript *ps = out->GetPScriptPubKey();
+                if (!ps) // Data / anon output
+                    return false;
+                CTxOut txout(0, *ps);
+                if (out->IsType(OUTPUT_STANDARD))
+                    txout.nValue = out->GetValue();
+                coin = Coin(txout, MEMPOOL_HEIGHT, false);
+                if (out->IsType(OUTPUT_CT)) {
+                    coin.nType = OUTPUT_CT;
+                    coin.commitment = ((CTxOutCT*)out)->commitment;
+                }
+                return true;
+            }
+            return false;
+        }
+        
         if (outpoint.n < ptx->vout.size()) {
             coin = Coin(ptx->vout[outpoint.n], MEMPOOL_HEIGHT, false, false);
             return true;

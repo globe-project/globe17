@@ -142,7 +142,10 @@ public:
  */
 class WalletBatch
 {
-private:
+
+friend class CHDWalletDB;
+
+protected:
     template <typename K, typename T>
     bool WriteIC(const K& key, const T& value, bool fOverwrite = true)
     {
@@ -258,7 +261,7 @@ public:
     bool ReadVersion(int& nVersion);
     //! Write wallet version
     bool WriteVersion(int nVersion);
-private:
+protected:
     BerkeleyBatch m_batch;
     WalletDatabase& m_database;
 };

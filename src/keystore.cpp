@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <keystore.h>
+#include <globe/stealth.h>
 
 #include <util.h>
 

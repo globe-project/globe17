@@ -21,6 +21,8 @@
 #include <utility>
 #include <vector>
 
+#include <globe/stealth.h>               // For CTxDestination
+
 class CCoinControl;
 class CFeeRate;
 class CKey;

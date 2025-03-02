@@ -62,6 +62,48 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
+bool CChainParams::IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn) const
+{
+    for (auto &hrp : bech32Prefixes)  {
+        if (vchPrefixIn == hrp) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+bool CChainParams::IsBech32Prefix(const std::vector<unsigned char> &vchPrefixIn, CChainParams::Base58Type &rtype) const
+{
+    for (size_t k = 0; k < MAX_BASE58_TYPES; ++k) {
+        auto &hrp = bech32Prefixes[k];
+        if (vchPrefixIn == hrp) {
+            rtype = static_cast<CChainParams::Base58Type>(k);
+            return true;
+        }
+    }
+
+    return false;
+};
+
+bool CChainParams::IsBech32Prefix(const char *ps, size_t slen, CChainParams::Base58Type &rtype) const
+{
+    for (size_t k = 0; k < MAX_BASE58_TYPES; ++k)
+    {
+        const auto &hrp = bech32Prefixes[k];
+        size_t hrplen = hrp.size();
+        if (hrplen > 0
+            && slen > hrplen
+            && strncmp(ps, (const char*)&hrp[0], hrplen) == 0)
+        {
+            rtype = static_cast<CChainParams::Base58Type>(k);
+            return true;
+        };
+    };
+
+    return false;
+};
+
 void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
 {
     consensus.vDeployments[d].nStartTime = nStartTime;
@@ -118,6 +160,8 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0xbfbbfc2c3be3d4e085082aff2e4e73a4e21dbf6205bc41b84b38ffac0a8bc114"); //453354
 
+        consensus.nMinRCTOutputDepth = 12;
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -140,18 +184,21 @@ public:
         // This is fine at runtime as we'll fall back to using them as a oneshot if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("qtum3.dynu.net"); // Qtum mainnet
-        vSeeds.emplace_back("qtum5.dynu.net"); // Qtum mainnet
-        vSeeds.emplace_back("qtum6.dynu.net"); // Qtum mainnet
-        vSeeds.emplace_back("qtum7.dynu.net"); // Qtum mainnet
+        vSeeds.emplace_back("qtum3.dynu.net"); // Globe mainnet
+        vSeeds.emplace_back("qtum5.dynu.net"); // Globe mainnet
+        vSeeds.emplace_back("qtum6.dynu.net"); // Globe mainnet
+        vSeeds.emplace_back("qtum7.dynu.net"); // Globe mainnet
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,58);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,50);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
+        base58Prefixes[STEALTH_ADDRESS] ={0x14}; // todo
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
-        bech32_hrp = "qc";
+        bech32Prefixes[STEALTH_ADDRESS].assign("ps","ps"+2);
+
+        bech32_hrp = "gc";
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -251,10 +298,13 @@ public:
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,120);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,110);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        base58Prefixes[STEALTH_ADDRESS]    = {0x15}; // T
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "tq";
+        bech32Prefixes[STEALTH_ADDRESS].assign("tps","tps"+3);
+
+        bech32_hrp = "tg";
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 

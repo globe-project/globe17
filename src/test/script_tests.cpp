@@ -14,6 +14,7 @@
 #include <utilstrencodings.h>
 #include <test/test_bitcoin.h>
 #include <rpc/server.h>
+#include <globe/stealth.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/bitcoinconsensus.h>

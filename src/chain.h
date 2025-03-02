@@ -206,6 +206,8 @@ public:
     //! Change to 64-bit type when necessary; won't happen before 2030
     unsigned int nChainTx;
 
+    int64_t nAnonOutputs; // last index
+
     //! Verification status of this block. See enum BlockStatus
     uint32_t nStatus;
 
@@ -247,6 +249,8 @@ public:
         nStatus = 0;
         nSequenceId = 0;
         nTimeMax = 0;
+
+        nAnonOutputs = 0;
 
         nVersion       = 0;
         hashMerkleRoot = uint256();
@@ -454,6 +458,9 @@ public:
         READWRITE(hashProof);
         READWRITE(vchBlockSig); // qtum
     }
+
+    //Ring CT
+    READWRITE(nAnonOutputs);
 
     uint256 GetBlockHash() const
     {

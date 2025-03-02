@@ -13,6 +13,7 @@
 #include <script/sign.h>
 #include <script/ismine.h>
 #include <test/test_bitcoin.h>
+#include <globe/stealth.h>
 
 #include <vector>
 

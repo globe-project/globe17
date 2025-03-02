@@ -95,6 +95,7 @@ endif
 # bitcoin core #
 BITCOIN_CORE_H = \
   addrdb.h \
+  rctindex.h \
   addrman.h \
   base58.h \
   bech32.h \
@@ -125,10 +126,18 @@ BITCOIN_CORE_H = \
   index/txindex.h \
   indirectmap.h \
   init.h \
+  anon.h \
+  blind.h \
   interfaces/handler.h \
   interfaces/node.h \
   interfaces/wallet.h \
   key.h \
+  globe/stealth.h \
+  globe/mnemonic.h \
+  globe/types.h \
+  globe/keyutil.h \
+  globe/hdwalletdb.h \
+  globe/hdwallet.h \
   key_io.h \
   keystore.h \
   dbwrapper.h \
@@ -191,6 +200,7 @@ BITCOIN_CORE_H = \
   validation.h \
   validationinterface.h \
   versionbits.h \
+  globe/extkey.h \
   walletinitinterface.h \
   wallet/coincontrol.h \
   wallet/crypter.h \
@@ -290,6 +300,8 @@ libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   interfaces/wallet.cpp \
+  blind.cpp \
+  globe/stealth.cpp \
   wallet/coincontrol.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
@@ -302,6 +314,8 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
+  globe/hdwalletdb.cpp \
+  globe/hdwallet.cpp \
   pos.cpp \
   $(BITCOIN_CORE_H)
 
@@ -413,7 +427,12 @@ libbitcoin_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  anon.cpp \
+  blind.cpp \
   key.cpp \
+  globe/keyutil.cpp \
+  globe/stealth.cpp \
+  globe/extkey.cpp \
   key_io.cpp \
   keystore.cpp \
   netaddress.cpp \
@@ -738,7 +757,7 @@ if GLIBC_BACK_COMPAT
 endif
 
 libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
+libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1) $(BOOST_LIBS)
 libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(BITCOIN_INCLUDES) -DBUILD_BITCOIN_INTERNAL
 libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 

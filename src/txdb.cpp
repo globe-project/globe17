@@ -19,6 +19,12 @@
 #include <boost/thread.hpp>
 
 static const char DB_COIN = 'C';
+static const char DB_ADDRESSINDEX = 'a';
+static const char DB_ADDRESSUNSPENTINDEX = 'u';
+static const char DB_TIMESTAMPINDEX = 's';
+static const char DB_BLOCKHASHINDEX = 'z';
+static const char DB_SPENTINDEX = 'p';
+
 static const char DB_COINS = 'c';
 static const char DB_BLOCK_FILES = 'f';
 static const char DB_BLOCK_INDEX = 'b';
@@ -437,6 +443,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
         if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
             CDiskBlockIndex diskindex;
             if (pcursor->GetValue(diskindex)) {
+
                 // Construct block index object
                 CBlockIndex* pindexNew = insertBlockIndex(diskindex.GetBlockHash());
                 pindexNew->pprev          = insertBlockIndex(diskindex.hashPrev);
@@ -452,11 +459,15 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nMoneySupply   = diskindex.nMoneySupply;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
+
                 pindexNew->hashStateRoot  = diskindex.hashStateRoot; // qtum
                 pindexNew->hashUTXORoot   = diskindex.hashUTXORoot; // qtum
                 pindexNew->nStakeModifier = diskindex.nStakeModifier;
                 pindexNew->prevoutStake   = diskindex.prevoutStake;
                 pindexNew->vchBlockSig    = diskindex.vchBlockSig; // qtum
+
+                // RingCT
+                pindexNew->nAnonOutputs   = diskindex.nAnonOutputs;
 
                 if (!CheckIndexProof(*pindexNew, Params().GetConsensus()))
                     return error("%s: CheckIndexProof failed: %s", __func__, pindexNew->ToString());
@@ -476,6 +487,64 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
 
     return true;
 }
+
+bool CBlockTreeDB::ReadRCTOutput(int64_t i, CAnonOutput &ao)
+{
+    return Read(std::make_pair(DB_RCTOUTPUT, i), ao);
+};
+
+bool CBlockTreeDB::WriteRCTOutput(int64_t i, const CAnonOutput &ao)
+{
+    CDBBatch batch(*this);
+    batch.Write(std::make_pair(DB_RCTOUTPUT, i), ao);
+    return WriteBatch(batch);
+};
+
+bool CBlockTreeDB::EraseRCTOutput(int64_t i)
+{
+    CDBBatch batch(*this);
+    batch.Erase(std::make_pair(DB_RCTOUTPUT, i));
+    return WriteBatch(batch);
+};
+
+
+bool CBlockTreeDB::ReadRCTOutputLink(const CCmpPubKey &pk, int64_t &i)
+{
+    return Read(std::make_pair(DB_RCTOUTPUT_LINK, pk), i);
+};
+
+bool CBlockTreeDB::WriteRCTOutputLink(const CCmpPubKey &pk, int64_t i)
+{
+    CDBBatch batch(*this);
+    batch.Write(std::make_pair(DB_RCTOUTPUT_LINK, pk), i);
+    return WriteBatch(batch);
+};
+
+bool CBlockTreeDB::EraseRCTOutputLink(const CCmpPubKey &pk)
+{
+    CDBBatch batch(*this);
+    batch.Erase(std::make_pair(DB_RCTOUTPUT_LINK, pk));
+    return WriteBatch(batch);
+};
+
+bool CBlockTreeDB::ReadRCTKeyImage(const CCmpPubKey &ki, uint256 &txhash)
+{
+    return Read(std::make_pair(DB_RCTKEYIMAGE, ki), txhash);
+};
+
+bool CBlockTreeDB::WriteRCTKeyImage(const CCmpPubKey &ki, const uint256 &txhash)
+{
+    CDBBatch batch(*this);
+    batch.Write(std::make_pair(DB_RCTKEYIMAGE, ki), txhash);
+    return WriteBatch(batch);
+};
+
+bool CBlockTreeDB::EraseRCTKeyImage(const CCmpPubKey &ki)
+{
+    CDBBatch batch(*this);
+    batch.Erase(std::make_pair(DB_RCTKEYIMAGE, ki));
+    return WriteBatch(batch);
+};
 
 namespace {
 

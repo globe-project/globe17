@@ -13,7 +13,7 @@
 
 typedef std::vector<unsigned char> valtype;
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const std::vector<uint8_t>& amountIn, int nHashTypeIn) : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn) {}
 
 bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& address, const CScript& scriptCode, SigVersion sigversion) const
 {
@@ -253,7 +253,9 @@ bool SignPSBTInput(const SigningProvider& provider, const CMutableTransaction& t
         return false;
     }
 
-    MutableTransactionSignatureCreator creator(&tx, index, utxo.nValue, sighash);
+    std::vector<uint8_t> amount(8);
+    memcpy(amount.data(), &utxo.nValue, 8);
+    MutableTransactionSignatureCreator creator(&tx, index, amount, sighash);
     bool sig_complete = ProduceSignature(provider, creator, utxo.scriptPubKey, sigdata);
     input.FromSignatureData(sigdata);
     return sig_complete;
@@ -305,7 +307,9 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
     Stacks stack(data);
 
     // Get signatures
-    MutableTransactionSignatureChecker tx_checker(&tx, nIn, txout.nValue);
+    std::vector<uint8_t> amount(8);
+    memcpy(amount.data(), &txout.nValue, 8);
+    MutableTransactionSignatureChecker tx_checker(&tx, nIn, amount);
     SignatureExtractorChecker extractor_checker(data, tx_checker);
     if (VerifyScript(data.scriptSig, txout.scriptPubKey, &data.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, extractor_checker)) {
         data.complete = true;
@@ -388,7 +392,9 @@ bool SignSignature(const SigningProvider &provider, const CScript& fromPubKey, C
 {
     assert(nIn < txTo.vin.size());
 
-    MutableTransactionSignatureCreator creator(&txTo, nIn, amount, nHashType);
+    std::vector<uint8_t> vAmount(8);
+    memcpy(amount.data(), &amount, 8);
+    MutableTransactionSignatureCreator creator(&txTo, nIn, vAmount, nHashType);
 
     SignatureData sigdata;
     bool ret = ProduceSignature(provider, creator, fromPubKey, sigdata);
@@ -425,7 +431,7 @@ bool VerifySignature(const Coin& coin, const uint256 txFromHash, const CTransact
 
 namespace {
 /** Dummy signature checker which accepts all signatures. */
-class DummySignatureChecker final : public BaseSignatureChecker
+class DummySignatureChecker : public BaseSignatureChecker
 {
 public:
     DummySignatureChecker() {}
@@ -433,7 +439,7 @@ public:
 };
 const DummySignatureChecker DUMMY_CHECKER;
 
-class DummySignatureCreator final : public BaseSignatureCreator {
+class DummySignatureCreator : public BaseSignatureCreator {
 private:
     char m_r_len = 32;
     char m_s_len = 32;
@@ -457,6 +463,22 @@ public:
     }
 };
 
+class DummySignatureCheckerGlobe : public DummySignatureChecker
+{
+// IsGlobeVersion() must return true to skip stack evaluation
+public:
+    DummySignatureCheckerGlobe() : DummySignatureChecker() {}
+    bool IsGlobeVersion() const { return true; }
+};
+const DummySignatureCheckerGlobe DUMMY_CHECKER_GLOBE;
+
+class DummySignatureCreatorGlobe : public DummySignatureCreator {
+public:
+    DummySignatureCreatorGlobe() : DummySignatureCreator(33, 32) {}
+    const BaseSignatureChecker& Checker() const { return DUMMY_CHECKER_GLOBE; }
+    bool IsGlobeVersion() const { return true; }
+};
+
 template<typename M, typename K, typename V>
 bool LookupHelper(const M& map, const K& key, V& value)
 {
@@ -472,6 +494,7 @@ bool LookupHelper(const M& map, const K& key, V& value)
 
 const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator(32, 32);
 const BaseSignatureCreator& DUMMY_MAXIMUM_SIGNATURE_CREATOR = DummySignatureCreator(33, 32);
+const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR_GLOBE = DummySignatureCreatorGlobe();
 const SigningProvider& DUMMY_SIGNING_PROVIDER = SigningProvider();
 
 bool IsSolvable(const SigningProvider& provider, const CScript& script)

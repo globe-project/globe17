@@ -13,11 +13,14 @@
 #include <memusage.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <rctindex.h>
 
 #include <assert.h>
 #include <stdint.h>
 
 #include <unordered_map>
+
+extern bool fGlobeMode;
 
 /**
  * A UTXO entry.
@@ -40,9 +43,29 @@ public:
     //! at which height this containing transaction was included in the active block chain
     uint32_t nHeight : 30;
 
+    uint8_t nType = OUTPUT_STANDARD;
+    secp256k1_pedersen_commitment commitment;
+
     //! construct a Coin from a CTxOut and height/coinbase information.
     Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn, bool fCoinStakeIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), fCoinStake(fCoinStakeIn), nHeight(nHeightIn) {}
     Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn, bool fCoinStakeIn) : out(outIn), fCoinBase(fCoinBaseIn), fCoinStake(fCoinStakeIn), nHeight(nHeightIn) {}
+
+    bool Matches(CTxOutBase *txo) const
+    {
+        if (!txo->IsType(nType))
+            return false;
+
+        if (out.scriptPubKey != *txo->GetPScriptPubKey())
+            return false;
+
+        if (nType == OUTPUT_STANDARD
+            && out.nValue != txo->GetValue())
+            return false;
+        if (nType == OUTPUT_CT
+            && memcmp(commitment.data, ((CTxOutCT*)txo)->commitment.data, 33) != 0)
+            return false;
+        return true;
+    }
 
     void Clear() {
         out.SetNull();
@@ -67,6 +90,10 @@ public:
         uint32_t code = (nHeight << 2) + (fCoinBase ? 1 : 0) + (fCoinStake ? 2 : 0);
         ::Serialize(s, VARINT(code));
         ::Serialize(s, CTxOutCompressor(REF(out)));
+        if (!fGlobeMode) return;
+        ::Serialize(s, nType);
+        if (nType == OUTPUT_CT)
+            s.write((char*)&commitment.data[0], 33);
     }
 
     template<typename Stream>
@@ -77,6 +104,10 @@ public:
         fCoinBase = code & 1;
         fCoinStake = (code >> 1) & 1;
         ::Unserialize(s, CTxOutCompressor(out));
+        if (!fGlobeMode) return;
+        ::Unserialize(s, nType);
+        if (nType == OUTPUT_CT)
+            s.read((char*)&commitment.data[0], 33);
     }
 
     bool IsSpent() const {
@@ -207,16 +238,34 @@ public:
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
 class CCoinsViewCache : public CCoinsViewBacked
 {
-protected:
+public:
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
      * declared as "const".
      */
     mutable uint256 hashBlock;
+    mutable int nBlockHeight = 0;
     mutable CCoinsMap cacheCoins;
 
     /* Cached dynamic memory usage for the inner Coin objects. */
     mutable size_t cachedCoinsUsage;
+
+    mutable bool fForceDisconnect = false; // disconnect even if rct mismatch
+    mutable int64_t nLastRCTOutput = 0;
+    mutable std::vector<std::pair<int64_t, CAnonOutput> > anonOutputs;
+    mutable std::map<CCmpPubKey, int64_t> anonOutputLinks;
+    mutable std::vector<std::pair<CCmpPubKey, uint256> > keyImages;
+
+    bool ReadRCTOutputLink(CCmpPubKey &pk, int64_t &index)
+    {
+        std::map<CCmpPubKey, int64_t>::iterator it = anonOutputLinks.find(pk);
+        if (it != anonOutputLinks.end()) {
+            index = it->second;
+            return true;
+        }
+
+        return false;
+    }
 
 public:
     CCoinsViewCache(CCoinsView *baseIn);
@@ -296,6 +345,8 @@ public:
      * @return	Sum of value of all inputs (scriptSigs)
      */
     CAmount GetValueIn(const CTransaction& tx) const;
+
+    CAmount GetPlainValueIn(const CTransaction &tx, size_t &nStandard, size_t &nCT, size_t &nRingCT) const;
 
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;

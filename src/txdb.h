@@ -9,6 +9,7 @@
 #include <coins.h>
 #include <dbwrapper.h>
 #include <chain.h>
+#include <rctindex.h>
 #include <primitives/block.h>
 
 #include <map>
@@ -22,6 +23,10 @@
 class CBlockIndex;
 class CCoinsViewDBCursor;
 class uint256;
+
+const char DB_RCTOUTPUT = 'A';
+const char DB_RCTOUTPUT_LINK = 'L';
+const char DB_RCTKEYIMAGE = 'K';
 
 //! Compensate for extra memory peak (x1.5-x1.9) at flush time.
 static constexpr int DB_PEAK_USAGE_FACTOR = 2;
@@ -125,6 +130,18 @@ public:
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
+
+    bool ReadRCTOutput(int64_t i, CAnonOutput &ao);
+    bool WriteRCTOutput(int64_t i, const CAnonOutput &ao);
+    bool EraseRCTOutput(int64_t i);
+
+    bool ReadRCTOutputLink(const CCmpPubKey &pk, int64_t &i);
+    bool WriteRCTOutputLink(const CCmpPubKey &pk, int64_t i);
+    bool EraseRCTOutputLink(const CCmpPubKey &pk);
+
+    bool ReadRCTKeyImage(const CCmpPubKey &ki, uint256 &txhash);
+    bool WriteRCTKeyImage(const CCmpPubKey &ki, const uint256 &txhash);
+    bool EraseRCTKeyImage(const CCmpPubKey &ki);
 
     ////////////////////////////////////////////////////////////////////////////// // qtum
     bool WriteHeightIndex(const CHeightTxIndexKey &heightIndex, const std::vector<uint256>& hash);
