@@ -9,6 +9,7 @@
 #include <utiltime.h>
 #include <validation.h>
 #include <globe/stealth.h>
+#include <globe/extkey.h>
 
 #include <boost/test/unit_test.hpp>
 

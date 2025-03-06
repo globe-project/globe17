@@ -239,6 +239,7 @@ bool WalletInit::Open() const
         if (!pwallet) {
             return false;
         }
+        
         AddWallet(pwallet);
     }
 

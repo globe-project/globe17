@@ -102,7 +102,7 @@ void DummyWalletInit::AddWalletOptions() const
     gArgs.AddHiddenArgs(opts);
 }
 
-const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
+//const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
 #endif
 
 #ifdef WIN32

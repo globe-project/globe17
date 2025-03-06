@@ -12,9 +12,10 @@
 #include <utilstrencodings.h>
 
 #include <globe/stealth.h>
+#include <globe/extkey.h>
 
-#include <qtum/qtumstate.h>
-#include <qtum/qtumtransaction.h>
+#include <globe/globestate.h>
+#include <globe/globetransaction.h>
 #include <validation.h>
 
 typedef std::vector<unsigned char> valtype;

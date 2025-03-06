@@ -20,6 +20,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <globe/stealth.h>
+#include <globe/extkey.h>
 
 
 // Tests these internal-to-net_processing.cpp methods:

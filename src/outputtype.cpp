@@ -10,6 +10,7 @@
 #include <script/script.h>
 #include <script/standard.h>
 #include <globe/stealth.h>
+#include <globe/extkey.h>
 
 #include <assert.h>
 #include <string>

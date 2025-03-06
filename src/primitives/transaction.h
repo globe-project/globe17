@@ -17,7 +17,7 @@
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
 static const uint8_t GLOBE_BLOCK_VERSION = 0xA0;
-static const uint8_t GLOBE_TXN_VERSION = 0xA0;
+static const uint8_t GLOBE_TXN_VERSION = 0xFF;
 static const uint8_t MAX_GLOBE_TXN_VERSION = 0xBF;
 static const uint8_t BTC_TXN_VERSION = 0x02;
 

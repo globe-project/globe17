@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <globe/stealth.h>               // For CTxDestination
+#include <globe/extkey.h>
 
 class CCoinControl;
 class CFeeRate;

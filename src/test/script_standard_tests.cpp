@@ -10,6 +10,7 @@
 #include <script/standard.h>
 #include <test/test_bitcoin.h>
 #include <globe/stealth.h>
+#include <globe/extkey.h>
 
 #include <boost/test/unit_test.hpp>
 
